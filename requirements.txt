@@ -1,0 +1,8 @@
+# Dépendances principales pour ton projet
+numpy==1.21.0
+scikit-learn>=0.24.0
+torch==1.9.0
+scipy==1.7.0
+
+# Dépendances pour les tests
+pytest==6.2.4
