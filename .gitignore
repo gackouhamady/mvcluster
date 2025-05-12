@@ -8,4 +8,7 @@ build/
 .token 
 *.env
 .venv
+.secrets.secrets
+dist
+.pytest_cache
 .secrets
