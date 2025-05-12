@@ -5,7 +5,7 @@ on:
     branches:
       - test         # Pour les tests en push sur 'test'
     tags:
-      - 'v*.*.*'     # Pour les releases (ex: v1.0.0)
+      - 'v*.*.*'     # Pour les releases (ex: v1.1)
   pull_request:
     branches:
       - main         # Pour les PR vers la branche principale
