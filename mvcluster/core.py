@@ -1,16 +1,19 @@
 from sklearn.cluster import KMeans
-import numpy as np
+
 
 def simple_kmeans(X, n_clusters=3):
     """
     Effectue un clustering K-means sur les données X.
-    
+
     Parameters:
-    - X : np.array, données d'entrée.
-    - n_clusters : int, nombre de clusters.
-    
+    X : np.array
+        Données d'entrée.
+    n_clusters : int
+        Nombre de clusters.
+
     Returns:
-    - labels : np.array, indices des clusters.
+    np.array
+        Indices des clusters.
     """
     kmeans = KMeans(n_clusters=n_clusters)
     kmeans.fit(X)
