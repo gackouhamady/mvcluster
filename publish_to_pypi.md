@@ -78,5 +78,3 @@ jobs:
 ```
 
 ---
-
-If you see the error “File already exists,” increment the version number in `pyproject.toml` or `setup.py` before retrying.
