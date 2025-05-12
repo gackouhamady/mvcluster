@@ -3,9 +3,9 @@ name: CI/CD Pipeline for mvcluster
 on:
   push:
     branches:
-      - test         # Pour les tests en push sur 'test'
+      - test         # Pour les tests en push sur 'test' fix
     tags:
-      - 'v*.*.*'     # Pour les releases (ex: v1.0.0)
+      - 'v*.*.*'     # Pour les releases (ex: v1.1)
   pull_request:
     branches:
       - main         # Pour les PR vers la branche principale
