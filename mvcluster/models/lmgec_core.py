@@ -13,37 +13,42 @@ def update_rule_G(XW, F):
     return tf.math.argmin(distances, axis=0, output_type=tf.dtypes.int32)
 
 
- 
+
 def train_loop(Xs, F, G, alphas, k, max_iter, tolerance):
+    """
+    Alternating optimization for LMGEC.
+    No @tf.function: works with dynamic shapes (e.g. Xs as lists).
+    """
     n_views = len(Xs)
-    losses = tf.TensorArray(tf.float64, size=0, dynamic_size=True)
-    prev_loss = tf.constant(float('inf'), dtype=tf.float64)
+    n_samples = Xs[0].shape[0]
+    embedding_dim = F.shape[1]
 
-    for i in tf.range(max_iter):
-        loss = tf.constant(0.0, dtype=tf.float64)
-        XW_consensus = tf.zeros((tf.shape(Xs[0])[0], tf.shape(F)[1]), dtype=tf.float64)
+    losses = []
+    prev_loss = float('inf')
 
+    for i in range(max_iter):
+        loss = 0.0
+        XW_consensus = tf.zeros((n_samples, embedding_dim), dtype=tf.float64)
 
         for v in range(n_views):
-            Wv = update_rule_W(Xs[v], F, G)
-            XWv = tf.matmul(Xs[v], Wv)
-            XW_consensus = tf.zeros((tf.shape(Xs[0])[0], tf.shape(F)[1]), dtype=tf.float64)
+            Xv = tf.cast(Xs[v], tf.float64)
+            Wv = update_rule_W(Xv, F, G)
+            XWv = tf.matmul(Xv, Wv)
+            XW_consensus += alphas[v] * XWv
 
-
-            F_gathered = tf.gather(F, G)
-            reconstruction = tf.matmul(F_gathered, tf.transpose(Wv))
-            loss_v = tf.norm(Xs[v] - reconstruction)
+            Fg = tf.gather(F, G)
+            recon = tf.matmul(Fg, tf.transpose(Wv))
+            loss_v = tf.norm(Xv - recon)
             loss += alphas[v] * loss_v
 
         G = update_rule_G(XW_consensus, F)
         F = update_rule_F(XW_consensus, G, k)
 
-        losses = losses.write(i, loss)
+        losses.append(loss.numpy())
 
-        # Convergence check
-        if tf.abs(prev_loss - loss) < tolerance:
+        if abs(prev_loss - loss) < tolerance:
             break
 
         prev_loss = loss
 
-    return G, F, XW_consensus, losses.stack()
+    return G, F, XW_consensus, tf.convert_to_tensor(losses, dtype=tf.float64)
