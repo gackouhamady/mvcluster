@@ -17,7 +17,7 @@ def run_lmgec_experiment(dataset, temperature=1, beta=1, max_iter=10, tolerance=
     k = len(np.unique(labels))
     views = list(product(As, Xs))
 
-    # Prétraitement des vues
+    # Preprocessing of views
     for v in range(len(views)):
         A, X = views[v]
         tf_idf = dataset in ['acm', 'dblp', 'imdb', 'photos']
@@ -32,7 +32,7 @@ def run_lmgec_experiment(dataset, temperature=1, beta=1, max_iter=10, tolerance=
         # Propagation : H_v = A * X
         Hs = [StandardScaler(with_std=False).fit_transform(S @ X) for S, X in views]
 
-        # Entraînement du modèle LMGEC
+        # Train LMGEC
         model = LMGEC(
             n_clusters=k,
             embedding_dim=k + 1,
