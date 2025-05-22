@@ -51,4 +51,3 @@ def init_W(
     # TruncatedSVD.components_ has shape [f, n_features]
     # Transpose to [n_features, f]
     return svd.components_.T
-

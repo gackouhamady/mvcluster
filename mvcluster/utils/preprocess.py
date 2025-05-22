@@ -54,4 +54,3 @@ def preprocess_dataset(
         features_processed = normalize(features, norm="l2")
 
     return adj_normalized, features_processed
-

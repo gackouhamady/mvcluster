@@ -84,7 +84,6 @@ def train_loop(
     :param tolerance: Convergence threshold.
     :returns: (G, F, XW_consensus, losses)
     """
-    import numpy as np
 
     n_views = len(Xs)
     n_samples = Xs[0].shape[0]
@@ -121,4 +120,3 @@ def train_loop(
         XW_cons,  # type: ignore
         tf.convert_to_tensor(losses, tf.float64),  # type: ignore
     )
-
