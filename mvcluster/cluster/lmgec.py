@@ -1,22 +1,63 @@
+"""
+LMGEC clustering model implementation.
+
+This module provides the LMGEC class, which implements the Localized
+Multi-Graph Embedding Clustering (LMGEC) algorithm. It extends
+scikit-learn's BaseEstimator and ClusterMixin interfaces, offering
+fit, predict, and transform methods for clustering across multiple views.
+"""
+
 import numpy as np
-from sklearn.base import BaseEstimator, ClusterMixin
-from ..utils.init_utils import init_G_F, init_W  # type: ignore
-from ..models.lmgec_core import train_loop       # type: ignore
+from sklearn.base import (
+    BaseEstimator,
+    ClusterMixin,
+)
+
+from ..utils.init_utils import (  # type: ignore
+    init_G_F,
+    init_W,
+)
+from ..models.lmgec_core import train_loop  # type: ignore
+
 
 class LMGEC(BaseEstimator, ClusterMixin):
-    def __init__(self, n_clusters=3, embedding_dim=10, temperature=0.5, max_iter=30, tolerance=1e-6):
+    """
+    Localized Multi-Graph Embedding Clustering (LMGEC) model.
+
+    :param int n_clusters: Number of clusters to form.
+    :param int embedding_dim: Dimension of embedding space.
+    :param float temperature: Temperature for view weighting.
+    :param int max_iter: Max training iterations.
+    :param float tolerance: Convergence threshold.
+    """
+
+    def __init__(
+        self,
+        n_clusters: int = 3,
+        embedding_dim: int = 10,
+        temperature: float = 0.5,
+        max_iter: int = 30,
+        tolerance: float = 1e-6,
+    ):
         self.n_clusters = n_clusters
         self.embedding_dim = embedding_dim
         self.temperature = temperature
         self.max_iter = max_iter
         self.tolerance = tolerance
 
-    def fit(self, X_views, y=None):
+    def fit(self, X_views, y=None):  # noqa: D102
+        """
+        Fit the LMGEC model to multiple data views.
+
+        :param list X_views: List of feature matrices per view.
+        :param y: Ignored, for API consistency.
+        :returns: Fitted estimator.
+        :rtype: self
+        """
         n_views = len(X_views)
         alphas = np.zeros(n_views)
         XW_consensus = 0
 
-        # Initialisation par vue
         for v, Xv in enumerate(X_views):
             Wv = init_W(Xv, self.embedding_dim)
             XWv = Xv @ Wv
@@ -25,27 +66,43 @@ class LMGEC(BaseEstimator, ClusterMixin):
             alphas[v] = np.exp(-inertia / self.temperature)
             XW_consensus += alphas[v] * XWv
 
-        # Moyenne pondérée
         XW_consensus /= alphas.sum()
-
-        # Réinitialisation du clustering sur consensus
         G, F = init_G_F(XW_consensus, self.n_clusters)
 
-        # Entraînement
         G, F, XW_final, losses = train_loop(
-            X_views, F, G, alphas, self.n_clusters, self.max_iter, self.tolerance
+            X_views,
+            F,  # type: ignore
+            G,  # type: ignore
+            alphas,
+            self.n_clusters,
+            self.max_iter,
+            self.tolerance,
         )
 
-        # Stockage des résultats
-        self.labels_ = G.numpy() if hasattr(G, 'numpy') else G
+        self.labels_ = G.numpy() if hasattr(G, "numpy") else G
         self.F_ = F
         self.XW_ = XW_final
         self.loss_history_ = losses
 
         return self
 
-    def predict(self, X_views):
+    def predict(self, X_views):  # noqa: D102
+        """
+        Predict cluster labels for input views after fitting.
+
+        :param list X_views: List of feature matrices (ignored).
+        :returns: Cluster labels from fit.
+        :rtype: array-like
+        """
         return self.labels_
 
-    def transform(self, X_views):
+    def transform(self, X_views):  # noqa: D102
+        """
+        Transform input views into the final embedding space.
+
+        :param list X_views: List of feature matrices (ignored).
+        :returns: Consensus embedding from fit.
+        :rtype: array-like
+        """
         return self.XW_
+
