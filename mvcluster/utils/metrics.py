@@ -1,12 +1,9 @@
 """
 Clustering evaluation utilities.
 
-This module provides functions to compute clustering accuracy and F1 score by
-optimally matching predicted clusters to true labels using the Hungarian algorithm.
-
 Functions:
 - ordered_confusion_matrix: reorder confusion matrix to maximize diagonal.
-- cmat_to_psuedo_y_true_and_y_pred: convert confusion matrix to pseudo-label lists.
+- cmat_to_psuedo_y_true_and_y_pred: convert confusion matrix.
 - clustering_accuracy: compute accuracy from reordered confusion matrix.
 - clustering_f1_score: compute macro F1 score after label matching.
 """
@@ -75,4 +72,3 @@ def clustering_f1_score(
     conf_mat = ordered_confusion_matrix(y_true, y_pred)
     y_t, y_p = cmat_to_psuedo_y_true_and_y_pred(conf_mat)
     return metrics.f1_score(y_t, y_p, **kwargs)  # type: ignore
-

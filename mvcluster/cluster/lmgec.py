@@ -8,16 +8,10 @@ fit, predict, and transform methods for clustering across multiple views.
 """
 
 import numpy as np
-from sklearn.base import (
-    BaseEstimator,
-    ClusterMixin,
-)
+from sklearn.base import BaseEstimator, ClusterMixin
 
-from ..utils.init_utils import (  # type: ignore
-    init_G_F,
-    init_W,
-)
-from ..models.lmgec_core import train_loop  # type: ignore
+from ..utils.init_utils import init_G_F, init_W  # type: ignore
+from ..models.lmgec_core import train_loop      # type: ignore
 
 
 class LMGEC(BaseEstimator, ClusterMixin):
@@ -73,7 +67,7 @@ class LMGEC(BaseEstimator, ClusterMixin):
             X_views,
             F,  # type: ignore
             G,  # type: ignore
-            alphas,
+            alphas,  # type: ignore
             self.n_clusters,
             self.max_iter,
             self.tolerance,
@@ -105,4 +99,3 @@ class LMGEC(BaseEstimator, ClusterMixin):
         :rtype: array-like
         """
         return self.XW_
-
