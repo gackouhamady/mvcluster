@@ -1,38 +1,45 @@
 name: Publish Sphinx docs
-# This workflow builds and deploys Sphinx documentation to GitHub Pages.
 
+# Déclenchement à chaque push sur main
 on:
   push:
     branches: [ main ]
 
 jobs:
-  build-deploy:
+  build-and-deploy:
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
 
-      - name: Setup Python
+    steps:
+      # 1. Récupérer le code
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # 2. Mettre en place Python
+      - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.x'
 
+      # 3. Installer Sphinx et extensions
       - name: Install dependencies
         run: |
+          pip install --upgrade pip
           pip install sphinx sphinx-rtd-theme sphinx-autodoc-typehints
 
-      - name: Build docs
+      # 4. Construire la doc
+      - name: Build Sphinx documentation
         run: |
-          cd docs
-          .\make.bat html
+          sphinx-build -b html docs/source docs/build/html
 
+      # 5. Désactiver Jekyll (évite les erreurs SCSS)
       - name: Disable Jekyll
         run: |
-          cd docs/build/html
-          echo > .nojekyll
+          touch docs/build/html/.nojekyll
 
+      # 6. Déployer sur GitHub Pages (branche gh-pages)
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: docs/build/html
           publish_branch: gh-pages
+          publish_dir: docs/build/html
