@@ -9,35 +9,70 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # 1. Checkout
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Dump workspace
-        run: ls -R .
+      # 2. Recherche dynamique du dossier source Sphinx
+      - name: Locate Sphinx source directory
+        run: |
+          echo "🔍 Début de la recherche depuis $(pwd)"
+          DIR=""
+          # On cherche tous les répertoires docs/source
+          for candidate in $(find . -type d -path "*/docs/source"); do
+            echo "  • Candidat : $candidate"
+            # On valide en cherchant conf.py
+            if [ -f "$candidate/conf.py" ]; then
+              DIR="$candidate"
+              echo "✅ Répertoire source validé : $DIR"
+              break
+            fi
+          done
 
+          if [ -z "$DIR" ]; then
+            echo "❌ ERREUR : Aucun dossier docs/source valide trouvé."
+            exit 1
+          fi
+
+          # On exporte pour les étapes suivantes
+          echo "SOURCE_DIR=$DIR" >> $GITHUB_ENV
+          BUILD_PARENT=$(dirname "$DIR")
+          BUILD_DIR="$BUILD_PARENT/build/html"
+          echo "BUILD_DIR=$BUILD_DIR" >> $GITHUB_ENV
+
+      # 3. Setup Python
       - name: Set up Python 3.x
         uses: actions/setup-python@v4
         with:
           python-version: '3.x'
 
+      # 4. Install dependencies
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install sphinx sphinx-rtd-theme sphinx-autodoc-typehints
 
+      # 5. Build Sphinx docs
       - name: Build Sphinx documentation
-        # Either adjust the path:
-        run: sphinx-build -b html mvcluster/mvcluster/docs/source mvcluster/mvcluster/docs/build/html
-        # …or run in the subfolder:
-        # working-directory: mvcluster
-        # run: sphinx-build -b html docs/source docs/build/html
+        run: |
+          echo "🚀 Construction de la doc Sphinx"
+          echo "   • Source : $SOURCE_DIR"
+          echo "   • Output : $BUILD_DIR"
+          echo "-> Dossier courant : $(pwd)"
+          echo "-> Contenu parent de la source :"
+          ls -R "$(dirname "$SOURCE_DIR")"
+          sphinx-build -b html "$SOURCE_DIR" "$BUILD_DIR" \
+            || { echo "❌ sphinx-build a échoué"; exit 1; }
 
+      # 6. Disable Jekyll
       - name: Disable Jekyll
-        run: touch mvcluster/mvcluster/docs/build/html/.nojekyll
+        run: |
+          touch "$BUILD_DIR/.nojekyll"
 
+      # 7. Deploy
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_branch: gh-pages
-          publish_dir: mvcluster/mvcluster/docs/build/html
+          publish_dir: $BUILD_DIR
