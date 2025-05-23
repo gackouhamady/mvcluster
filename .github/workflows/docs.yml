@@ -1,3 +1,4 @@
+# .github/workflows/docs.yml
 name: Publish Sphinx docs
 
 on:
@@ -8,49 +9,45 @@ on:
 jobs:
   docs:
     runs-on: ubuntu-latest
+
     steps:
+      # 1. Récupérer le dépôt
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # 2. Installer Python 3.11
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
+      # 3. Installer Sphinx et extensions
       - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip
           pip install sphinx sphinx-rtd-theme sphinx-autodoc-typehints
 
-      - name: Install project requirements
+      # 4. (Optionnel) Vérifier la structure du dépôt
+      - name: Vérifier la structure du dépôt
         run: |
-          if [ -f requirements/requirements.txt ]; then
-            pip install -r requirements/requirements.txt
-          fi
+          echo "Répertoire courant : $(pwd)"
+          echo "Contenu du dépôt :"
+          ls -R .
 
-      - name: Lister le dossier courant
-        run: |
-          pwd
-          ls -alR
-
-      - name: Vérifier le dossier docs
-        run: |
-          echo "Contenu du dossier courant juste avant Sphinx :"
-          pwd
-          ls -al
-          echo "Contenu du dossier docs :"
-          ls -al docs || echo "Le dossier docs n'existe pas"
-          ls -al docs/source || echo "Le dossier docs/source n'existe pas"
-
+      # 5. Construire la doc Sphinx
       - name: Build Sphinx documentation
         run: |
-          pwd
+          echo "🔨 Construction de la documentation Sphinx"
+          echo " → Source : docs/source"
+          echo " → Destination : docs/build/html"
           sphinx-build -b html docs/source docs/build/html
 
+      # 6. Désactiver Jekyll
       - name: Add .nojekyll file
         run: |
           touch docs/build/html/.nojekyll
 
+      # 7. Déployer sur GitHub Pages
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
