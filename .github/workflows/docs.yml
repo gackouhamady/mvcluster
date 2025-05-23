@@ -3,73 +3,42 @@ name: Publish Sphinx docs
 on:
   push:
     branches: [ main ]
+  workflow_dispatch:
 
 jobs:
-  build-and-deploy:
+  docs:
     runs-on: ubuntu-latest
-
     steps:
-      # 1. Checkout
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      # 2. Recherche dynamique du dossier source Sphinx
-      - name: Locate Sphinx source directory
-        run: |
-          echo "🔍 Début de la recherche depuis $(pwd)"
-          DIR=""
-          # Cherche tout dossier contenant conf.py
-          for candidate in $(find . -type f -name conf.py); do
-            SRC_DIR=$(dirname "$candidate")
-            echo "  • Candidat : $SRC_DIR"
-            DIR="$SRC_DIR"
-            echo "✅ Répertoire source validé : $DIR"
-            break
-          done
-
-          if [ -z "$DIR" ]; then
-            echo "❌ ERREUR : Aucun dossier contenant conf.py trouvé."
-            exit 1
-          fi
-
-          echo "SOURCE_DIR=$DIR" >> $GITHUB_ENV
-          BUILD_PARENT=$(dirname "$DIR")
-          BUILD_DIR="$BUILD_PARENT/build/html"
-          echo "BUILD_DIR=$BUILD_DIR" >> $GITHUB_ENV
-
-      # 3. Setup Python
-      - name: Set up Python 3.x
-        uses: actions/setup-python@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          python-version: '3.x'
+          python-version: '3.11'
 
-      # 4. Install dependencies
-      - name: Install dependencies
+      - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip
           pip install sphinx sphinx-rtd-theme sphinx-autodoc-typehints
 
-      # 5. Build Sphinx docs
+      - name: Install project requirements
+        run: |
+          if [ -f requirements/requirements.txt ]; then
+            pip install -r requirements/requirements.txt
+          fi
+
       - name: Build Sphinx documentation
         run: |
-          echo "🚀 Construction de la doc Sphinx"
-          echo "   • Source : $SOURCE_DIR"
-          echo "   • Output : $BUILD_DIR"
-          echo "-> Dossier courant : $(pwd)"
-          echo "-> Contenu parent de la source :"
-          ls -R "$(dirname "$SOURCE_DIR")"
-          sphinx-build -b html "$SOURCE_DIR" "$BUILD_DIR" \
-            || { echo "❌ sphinx-build a échoué"; exit 1; }
+          sphinx-build -b html docs/source docs/build/html
 
-      # 6. Disable Jekyll
-      - name: Disable Jekyll
+      - name: Add .nojekyll file
         run: |
-          touch "$BUILD_DIR/.nojekyll"
+          touch docs/build/html/.nojekyll
 
-      # 7. Deploy
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: docs/build/html
           publish_branch: gh-pages
-          publish_dir: $BUILD_DIR
