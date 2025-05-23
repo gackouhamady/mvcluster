@@ -1,4 +1,5 @@
 name: Publish Sphinx docs
+# This workflow builds and deploys Sphinx documentation to GitHub Pages.
 
 on:
   push:
