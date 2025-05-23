@@ -1,6 +1,6 @@
+# .github/workflows/docs.yml
 name: Publish Sphinx docs
 
-# On déclenche ce workflow à chaque push sur main
 on:
   push:
     branches: [ main ]
@@ -10,35 +10,28 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Récupérer le code
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # 2. Mettre en place Python
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.x'
 
-      # 3. Installer Sphinx et extensions
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install sphinx sphinx-rtd-theme sphinx-autodoc-typehints
 
-      # 4. Construire la doc Sphinx
       - name: Build Sphinx documentation
-        run: |
-          cd docs
-          sphinx-build -b html source build/html
+        # Appelle sphinx-build depuis la racine,
+        # sans jamais changer de dossier
+        run: sphinx-build -b html docs/source docs/build/html
 
-      # 5. Désactiver Jekyll
       - name: Disable Jekyll
-        run: |
-          cd docs/build/html
-          touch .nojekyll
+        # Empêche GitHub Pages d'appliquer Jekyll
+        run: touch docs/build/html/.nojekyll
 
-      # 6. Déployer sur GitHub Pages (branche gh-pages)
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
