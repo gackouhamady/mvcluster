@@ -1,8 +1,6 @@
 # .github/workflows/docs.yml
-
 name: Publish Sphinx docs
 
-# Ne se déclenche que sur main
 on:
   push:
     branches: [ main ]
@@ -12,35 +10,35 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1) Récupère le code
-      - name: Checkout repository
+      # 1) Checkout the repository
+      - name: Checkout code
         uses: actions/checkout@v3
 
-      # 2) Installe Python
-      - name: Setup Python 3.x
+      # 2) Set up Python
+      - name: Set up Python 3.x
         uses: actions/setup-python@v4
         with:
           python-version: '3.x'
 
-      # 3) Installe Sphinx et extensions
-      - name: Install Sphinx dependencies
+      # 3) Install Sphinx and extensions
+      - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install sphinx sphinx-rtd-theme sphinx-autodoc-typehints
 
-      # 4) Génère la doc Sphinx
-      - name: Build Sphinx documentation
+      # 4) Build the Sphinx documentation
+      - name: Build documentation
         run: sphinx-build -b html docs/source docs/build/html
 
-      # 5) Crée .nojekyll pour désactiver Jekyll
+      # 5) Disable Jekyll (so GitHub Pages will serve raw HTML)
       - name: Disable Jekyll
         run: echo > docs/build/html/.nojekyll
 
-      # 6) Déploie sur la branche gh-pages
+      # 6) Deploy to GitHub Pages (branch gh-pages)
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_branch: gh-pages
           publish_dir: docs/build/html
-          keep_files: false     # écrase tout sur gh-pages
+          keep_files: false  # overwrite everything on gh-pages
