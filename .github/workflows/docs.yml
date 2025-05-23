@@ -28,6 +28,11 @@ jobs:
             pip install -r requirements/requirements.txt
           fi
 
+      - name: Lister le dossier courant
+        run: |
+          pwd
+          ls -alR
+
       - name: Build Sphinx documentation
         run: |
           sphinx-build -b html docs/source docs/build/html
