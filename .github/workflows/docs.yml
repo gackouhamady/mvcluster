@@ -33,8 +33,18 @@ jobs:
           pwd
           ls -alR
 
+      - name: Vérifier le dossier docs
+        run: |
+          echo "Contenu du dossier courant juste avant Sphinx :"
+          pwd
+          ls -al
+          echo "Contenu du dossier docs :"
+          ls -al docs || echo "Le dossier docs n'existe pas"
+          ls -al docs/source || echo "Le dossier docs/source n'existe pas"
+
       - name: Build Sphinx documentation
         run: |
+          pwd
           sphinx-build -b html docs/source docs/build/html
 
       - name: Add .nojekyll file
