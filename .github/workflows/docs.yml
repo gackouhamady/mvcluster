@@ -32,7 +32,7 @@ jobs:
             fi
           done
           if [ -z "$FOUND" ]; then
-            echo "❌ Error: docs/source not found in: ${POSSIBLE[*]}"
+            echo "❌ Error: docs/source not found in any of: ${POSSIBLE[*]}"
             exit 1
           fi
 
@@ -53,6 +53,7 @@ jobs:
       - name: Build Sphinx documentation
         working-directory: ${{ steps.find_source.outputs.SOURCE_ROOT }}
         run: |
+          echo "ℹ️ Building docs from $PWD/docs/source → docs/build/html"
           sphinx-build -b html docs/source docs/build/html
 
       - name: Verify build output
@@ -60,10 +61,10 @@ jobs:
         run: |
           BUILD="${{ steps.find_source.outputs.SOURCE_ROOT }}/docs/build/html"
           if [ -d "$BUILD" ]; then
-            echo "✅ Build dir: $BUILD"
+            echo "✅ Build dir found: $BUILD"
             echo "BUILD_DIR=$BUILD" >> "$GITHUB_OUTPUT"
           else
-            echo "❌ Missing build dir: $BUILD"
+            echo "❌ Build dir missing: $BUILD"
             exit 1
           fi
 
@@ -74,4 +75,3 @@ jobs:
 
       - name: Deploy to GitHub Pages
         uses: actions/deploy-pages@v1
-          
