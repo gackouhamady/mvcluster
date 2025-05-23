@@ -18,23 +18,20 @@ jobs:
         run: |
           echo "🔍 Début de la recherche depuis $(pwd)"
           DIR=""
-          # On cherche tous les répertoires docs/source
-          for candidate in $(find . -type d -path "*/docs/source"); do
-            echo "  • Candidat : $candidate"
-            # On valide en cherchant conf.py
-            if [ -f "$candidate/conf.py" ]; then
-              DIR="$candidate"
-              echo "✅ Répertoire source validé : $DIR"
-              break
-            fi
+          # Cherche tout dossier contenant conf.py
+          for candidate in $(find . -type f -name conf.py); do
+            SRC_DIR=$(dirname "$candidate")
+            echo "  • Candidat : $SRC_DIR"
+            DIR="$SRC_DIR"
+            echo "✅ Répertoire source validé : $DIR"
+            break
           done
 
           if [ -z "$DIR" ]; then
-            echo "❌ ERREUR : Aucun dossier docs/source valide trouvé."
+            echo "❌ ERREUR : Aucun dossier contenant conf.py trouvé."
             exit 1
           fi
 
-          # On exporte pour les étapes suivantes
           echo "SOURCE_DIR=$DIR" >> $GITHUB_ENV
           BUILD_PARENT=$(dirname "$DIR")
           BUILD_DIR="$BUILD_PARENT/build/html"
