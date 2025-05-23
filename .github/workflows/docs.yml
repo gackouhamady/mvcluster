@@ -1,6 +1,6 @@
 name: Publish Sphinx docs
 
-# Déclenchement à chaque push sur main
+# On déclenche ce workflow à chaque push sur main
 on:
   push:
     branches: [ main ]
@@ -23,18 +23,20 @@ jobs:
       # 3. Installer Sphinx et extensions
       - name: Install dependencies
         run: |
-          pip install --upgrade pip
+          python -m pip install --upgrade pip
           pip install sphinx sphinx-rtd-theme sphinx-autodoc-typehints
 
-      # 4. Construire la doc
+      # 4. Construire la doc Sphinx
       - name: Build Sphinx documentation
         run: |
-          sphinx-build -b html docs/source docs/build/html
+          cd docs
+          sphinx-build -b html source build/html
 
-      # 5. Désactiver Jekyll (évite les erreurs SCSS)
+      # 5. Désactiver Jekyll
       - name: Disable Jekyll
         run: |
-          touch docs/build/html/.nojekyll
+          cd docs/build/html
+          touch .nojekyll
 
       # 6. Déployer sur GitHub Pages (branche gh-pages)
       - name: Deploy to GitHub Pages
