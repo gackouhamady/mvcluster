@@ -4,6 +4,11 @@ on:
   push:
     branches: [ main ]
 
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
 jobs:
   build-deploy:
     runs-on: ubuntu-latest
@@ -12,26 +17,61 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Setup Python
+      - name: Locate docs/source
+        id: find_source
+        run: |
+          echo "🔍 Searching for docs/source in possible locations..."
+          POSSIBLE=(. mvcluster mvcluster/mvcluster)
+          FOUND=
+          for D in "${POSSIBLE[@]}"; do
+            if [ -d "$D/docs/source" ]; then
+              echo "✅ Found docs at $D/docs/source"
+              echo "SOURCE_ROOT=$D" >> "$GITHUB_OUTPUT"
+              FOUND=1
+              break
+            fi
+          done
+          if [ -z "$FOUND" ]; then
+            echo "❌ Error: docs/source not found in: ${POSSIBLE[*]}"
+            exit 1
+          fi
+
+      - name: Setup Python & install Sphinx
         uses: actions/setup-python@v4
         with:
           python-version: '3.x'
-
-      - name: Install Sphinx and extensions
-        run: |
+      - run: |
           python -m pip install --upgrade pip
           pip install sphinx sphinx-rtd-theme sphinx-autodoc-typehints
 
-      - name: Build Sphinx documentation
-        run: sphinx-build -b html mvcluster/mvcluster/docs/source mvcluster/mvcluster/docs/build/html
+      - name: Prepare _static directory
+        working-directory: ${{ steps.find_source.outputs.SOURCE_ROOT }}
+        run: |
+          mkdir -p docs/source/_static
+          echo "✅ Ensured docs/source/_static exists"
 
-      - name: Disable Jekyll
-        run: echo > mvcluster/mvcluster/docs/build/html/.nojekyll
+      - name: Build Sphinx documentation
+        working-directory: ${{ steps.find_source.outputs.SOURCE_ROOT }}
+        run: |
+          sphinx-build -b html docs/source docs/build/html
+
+      - name: Verify build output
+        id: find_build
+        run: |
+          BUILD="${{ steps.find_source.outputs.SOURCE_ROOT }}/docs/build/html"
+          if [ -d "$BUILD" ]; then
+            echo "✅ Build dir: $BUILD"
+            echo "BUILD_DIR=$BUILD" >> "$GITHUB_OUTPUT"
+          else
+            echo "❌ Missing build dir: $BUILD"
+            exit 1
+          fi
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v1
+        with:
+          path: ${{ steps.find_build.outputs.BUILD_DIR }}
 
       - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_branch: gh-pages
-          publish_dir: mvcluster/mvcluster/docs/build/html
-          keep_files: false
+        uses: actions/deploy-pages@v1
+          
