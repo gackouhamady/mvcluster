@@ -6,51 +6,65 @@ on:
     branches: [ main ]
   workflow_dispatch:
 
+# Required permissions for GitHub Pages deployment
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
 jobs:
   docs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Récupérer le dépôt
+      # 1. Checkout the repository
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 2. Installer Python 3.11
+      # 2. Set up Python 3.11
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
-      # 3. Installer Sphinx et extensions
+      # 3. Install all required dependencies
       - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip
+          pip install -r requirements/requirements.txt
           pip install sphinx sphinx-rtd-theme sphinx-autodoc-typehints
 
-      # 4. (Optionnel) Vérifier la structure du dépôt
-      - name: Vérifier la structure du dépôt
+      # 4. Create static directory if it doesn't exist
+      - name: Create static files directory
         run: |
-          echo "Répertoire courant : $(pwd)"
-          echo "Contenu du dépôt :"
+          mkdir -p docs/source/_static
+          touch docs/source/_static/.gitkeep
+
+      # 5. (Optional) Check repository structure
+      - name: Check repository structure
+        run: |
+          echo "Current directory: $(pwd)"
+          echo "Repository content:"
           ls -R .
 
-      # 5. Construire la doc Sphinx
+      # 6. Build Sphinx documentation
       - name: Build Sphinx documentation
         run: |
-          echo "🔨 Construction de la documentation Sphinx"
-          echo " → Source : docs/source"
-          echo " → Destination : docs/build/html"
+          echo "🔨 Building Sphinx documentation"
+          echo " → Source: docs/source"
+          echo " → Output: docs/build/html"
           sphinx-build -b html docs/source docs/build/html
 
-      # 6. Désactiver Jekyll
+      # 7. Disable Jekyll
       - name: Add .nojekyll file
         run: |
           touch docs/build/html/.nojekyll
 
-      # 7. Déployer sur GitHub Pages
+      # 8. Deploy to GitHub Pages
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: docs/build/html
           publish_branch: gh-pages
+          force_orphan: true  # Ensures clean deployment each time
