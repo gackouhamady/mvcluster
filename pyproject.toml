@@ -1,6 +1,6 @@
 [project]
 name = "mvcluster"
-version = "1.10"
+version = "1.11"
 description = "A Python package for multiview unsupervised clustering"
 authors = [{name = "Hamady GACKOU", email = "researcherdatascientist@gmail.com"}]
 readme = "README.md"
@@ -16,6 +16,10 @@ classifiers = [
     "Programming Language :: Python :: 3.9",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]
+
+
+[project.scripts]
+mvcluster-demo = "mvcluster.examples.visualize_clusters:main"
 
 [build-system]
 requires = ["setuptools", "wheel"]
