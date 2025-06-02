@@ -1,5 +1,6 @@
 from .init_utils import init_G_F, init_W
 from .datagen import datagen
+from .plot import visualize_clusters  # noqa: F401
 from .metrics import (
     ordered_confusion_matrix,
     cmat_to_psuedo_y_true_and_y_pred,
