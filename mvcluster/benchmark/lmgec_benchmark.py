@@ -116,7 +116,7 @@ if __name__ == "__main__":
         "--dataset",
         type=str,
         default="acm",
-        help="Dataset to load (e.g., acm, dblp, imdb, photos).",
+        help="Dataset to load (e.g., acm, dblp, imdb, photos, wallomics).",
     )
     parser.add_argument(
         "--temperature",

@@ -18,7 +18,7 @@ from sklearn.decomposition import TruncatedSVD
 def init_G_F(
     XW: np.ndarray,
     k: int,
-) -> tuple:
+) -> tuple:  # noqa: E402
     """
     Initialize cluster assignments G and centroids F using KMeans.
 
@@ -46,8 +46,15 @@ def init_W(
     :returns: Projection matrix [n_features, f].
     :rtype: np.ndarray
     """
-    svd = TruncatedSVD(n_components=f)
+    n_features = X.shape[1]
+    n_components = min(f, n_features)
+    svd = TruncatedSVD(n_components=n_components)
     svd.fit(X)
-    # TruncatedSVD.components_ has shape [f, n_features]
-    # Transpose to [n_features, f]
-    return svd.components_.T
+    W = svd.components_.T  # shape: [f, n_components]
+
+    # Pad with zeros if too small
+    if n_components < f:
+        pad_width = f - n_components
+        W = np.pad(W, ((0, 0), (0, pad_width)), mode='constant')
+
+    return W  # always [n_features, f]

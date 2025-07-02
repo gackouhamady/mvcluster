@@ -15,3 +15,14 @@ dist
 Schedule.md
 mvcluster/datasets/data_lmgec
 publish_to_pypi.md
+demo.py
+omic-help.md
+Multi_Omique_Data.ipynb
+prepared_datasets
+examples/custom_data
+plots
+custom_data_info.md
+hyperparam_results.csv
+MANIFEST.in
+omic.md
+

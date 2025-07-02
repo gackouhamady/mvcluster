@@ -1,6 +1,6 @@
 [project]
 name = "mvcluster"
-version = "1.11"
+version = "1.12"
 description = "A Python package for multiview unsupervised clustering"
 authors = [{name = "Hamady GACKOU", email = "researcherdatascientist@gmail.com"}]
 readme = "README.md"
