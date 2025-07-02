@@ -171,3 +171,83 @@ The pipeline stages for each model are presented as text-based flow diagrams to 
 
   Print: ACC, F1, NMI, ARI scores (averaged across runs)
 ```
+
+
+
+# LMGEC Model: Mathematical Formulation and Weight Update Pseudocode
+
+## 1. Mathematical Formulation
+
+### Notations
+- \( V \): Number of views, indexed by \( i = 1, \ldots, V \)
+- For each view \( i \):
+  - \( \mathbf{S}_i \in \mathbb{R}^{n \times n} \): normalized adjacency matrix
+  - \( \mathbf{X}_i \in \mathbb{R}^{n \times d_i} \): feature matrix
+- \( n \): number of samples
+- Parameters:
+  - \( T > 0 \): temperature controlling view weighting sharpness
+  - \( \beta > 0 \): graph regularization parameter
+  - \( k \): number of clusters (embedding dimension is \( k+1 \))
+
+### View Preprocessing
+\[
+(\mathbf{S}_i, \mathbf{X}_i) \leftarrow \text{preprocess\_dataset}(\mathbf{A}_i, \mathbf{X}_i, \beta)
+\]
+
+\[
+\mathbf{H}_i = \text{StandardScaler}(\mathbf{S}_i \mathbf{X}_i)
+\]
+
+
+### Score Computation per View
+\[
+s_i = \|\mathbf{X}_i \mathbf{W} \mathbf{v}\|_F
+\]
+where \( \mathbf{W}, \mathbf{v} \) are model parameters and \(\|\cdot\|_F\) is Frobenius norm.
+
+### Weight Computation (Softmax with Temperature)
+\[
+\alpha_i = \frac{\exp(s_i / T)}{\sum_{j=1}^V \exp(s_j / T)}
+\]
+
+- \( T \to 0 \): weights become one-hot (selecting one view)
+- \( T \to \infty \): weights become uniform
+
+### Fusion of Views
+\[
+\mathbf{Z} = \sum_{i=1}^V \alpha_i \mathbf{H}_i
+\]
+
+### Objective Function
+\[
+\mathcal{L} = \text{ClusteringLoss}(\mathbf{Z}) + \beta \cdot \text{GraphRegularization}(\{\mathbf{S}_i\})
+\]
+
+---
+
+## 2. Weight Update Pseudocode
+
+```python
+initialize model parameters W, v, ...
+
+for iteration in range(max_iter):
+    scores = []
+    for i in range(V):
+        Z_i = X_i @ W @ v           # Project view i
+        s_i = norm(Z_i, 'fro')      # Compute score for view i
+        scores.append(s_i)
+    
+    # Compute weights alpha with softmax temperature T
+    exp_scores = [exp(s / T) for s in scores]
+    sum_exp = sum(exp_scores)
+    alphas = [e / sum_exp for e in exp_scores]
+    
+    # Fuse views with weights
+    Z = sum(alphas[i] * H_i for i in range(V))
+    
+    # Update model parameters (e.g., gradient step)
+    update_parameters()
+    
+    if convergence_criteria_met:
+        break
+```

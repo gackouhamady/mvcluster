@@ -16,8 +16,8 @@ release = '1.10'
 
 suppress_warnings = ['ref.ref']
 
-import os
-import sys
+import os  # noqa :E402
+import sys  # noqa :E402
 sys.path.insert(0, os.path.abspath('../../'))  # pour que Sphinx tro
 
 # Extensions
@@ -32,9 +32,8 @@ intersphinx_mapping = {
 }
 
 autodoc_default_options = {
-    'exclude-members': '__get__',  # ou tout le sous-module sklearn.utils._metadata_requests
+    'exclude-members': '__get__',
 }
-
 
 
 templates_path = ['_templates']
