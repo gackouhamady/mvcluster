@@ -24,8 +24,12 @@ publish_to_pypi.md
 demo.py
 omic-help.md
 Multi_Omique_Data.ipynb
-prepared_datasets
-examples/custom_data
+# Ignore everything in the folder...
+prepared_datasets/*
+# ...but DO NOT ignore .gitattributes and .mat files
+!prepared_datasets/.gitattributes
+!prepared_datasets/*.mat
+!examples/custom_data
 plots
 custom_data_info.md
 hyperparam_results.csv
