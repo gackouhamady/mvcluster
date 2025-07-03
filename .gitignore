@@ -13,7 +13,13 @@ dist
 .pytest_cache
 .secrets
 Schedule.md
-mvcluster/datasets/data_lmgec
+# Ignore everything in the folder...
+mvcluster/datasets/data_lmgec/*
+
+# ...but DO NOT ignore .gitattributes and .mat files
+!mvcluster/datasets/data_lmgec/.gitattributes
+!mvcluster/datasets/data_lmgec/*.mat
+
 publish_to_pypi.md
 demo.py
 omic-help.md
@@ -25,4 +31,4 @@ custom_data_info.md
 hyperparam_results.csv
 MANIFEST.in
 omic.md
-
+process.ipynb

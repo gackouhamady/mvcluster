@@ -55,7 +55,8 @@ class LMGEC(BaseEstimator, ClusterMixin):
         self.max_iter = max_iter
         self.tolerance = tolerance
 
-    def fit(self, X_views, y=None):  # noqa: D102
+
+    def fit(self, X_views, y=None):  # noqa: D102, E303
         """
         Fit the LMGEC model to multiple data views.
 
@@ -70,12 +71,16 @@ class LMGEC(BaseEstimator, ClusterMixin):
         :rtype: self
         """
         for i, X in enumerate(X_views):
-            print(f"View {i} shape: {X.shape}, sum: {np.sum(X)}, any NaN: {np.isnan(X).any()}")  # noqa: E501
-        n_views = len(X_views)
-        alphas = np.zeros(n_views)
-        XW_consensus = 0
-        Ws = []
+            print(
+                f"View {i} shape: {X.shape}, sum: {np.sum(X)}, "
+                f"any NaN: {np.isnan(X).any()}"
+            )
 
+        n_views = len(X_views)  # noqa: F841
+        Ws = []
+        inertias = []
+
+        # Step 1: Initialize weights and compute inertias
         for v, Xv in enumerate(X_views):
             Wv = init_W(Xv, self.embedding_dim)
             Ws.append(Wv)
@@ -83,17 +88,23 @@ class LMGEC(BaseEstimator, ClusterMixin):
             print(f"View {v}: XWv norm = {np.linalg.norm(XWv)}")
             Gv, Fv = init_G_F(XWv, self.n_clusters)
             inertia = np.linalg.norm(XWv - Fv[Gv])
-            alphas[v] = np.exp(-inertia / self.temperature)
-            XW_consensus += alphas[v] * XWv
+            inertias.append(inertia)
 
-        alpha_sum = alphas.sum()
-        print("DEBUG: Alphas before normalization =", alphas)
-        print("DEBUG: Alpha sum =", alpha_sum)
-        if alpha_sum == 0 or np.isnan(alpha_sum):
-            print("DEBUG: alphas =", alphas)
-            print("DEBUG: XWv norms =", [np.linalg.norm(X @ W) for X, W in zip(X_views, Ws)])  # noqa: E501
-            raise ValueError("Alpha weights sum to zero or NaN; cannot normalize XW_consensus.")  # noqa: E501
-        XW_consensus /= alpha_sum
+        # Step 2: Compute alphas using stable softmax
+        inertias = np.array(inertias)
+        scaled = -inertias / (self.temperature + 1e-8)
+        max_scaled = np.max(scaled)
+        exp_scaled = np.exp(scaled - max_scaled)
+        alphas = exp_scaled / (np.sum(exp_scaled) + 1e-8)
+
+        print("DEBUG: Inertias =", inertias)
+        print("DEBUG: Alphas (normalized weights) =", alphas)
+        print("DEBUG: Sum of alphas =", np.sum(alphas))
+
+        # Step 3: Compute consensus embedding
+        XW_consensus = sum(
+            alpha * (X @ W) for alpha, X, W in zip(alphas, X_views, Ws)
+        )
 
         G, F = init_G_F(XW_consensus, self.n_clusters)
 
@@ -114,7 +125,8 @@ class LMGEC(BaseEstimator, ClusterMixin):
 
         return self
 
-    def predict(self, X_views):  # noqa: D102
+
+    def predict(self, X_views):  # noqa: D102, E303
         """
         Predict cluster labels for input views after fitting.
 

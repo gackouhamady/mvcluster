@@ -301,9 +301,9 @@ def main():
                         help="Input files")
     parser.add_argument("--labels", help="Label file")
     parser.add_argument("--data_name", required=True, help="Output name")
-    parser.add_argument("--k", type=int, default=15,
+    parser.add_argument("--k", type=int, default=10,
                         help="k for KNN graph")
-    parser.add_argument("--min_features", type=int, default=1,
+    parser.add_argument("--min_features", type=int, default=2,
                         help="Min features")
     parser.add_argument("--output_dir", default="prepared_datasets",
                         help="Output dir")
